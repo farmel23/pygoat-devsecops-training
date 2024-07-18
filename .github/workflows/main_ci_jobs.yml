@@ -1,9 +1,6 @@
-name: ci-pipeline
+name: CI_PIPELINE_JOBS
 
-on: 
-  push:
-    branches:
-      -main
+on: [push]
 
 jobs:
  sast_scan:
@@ -31,12 +28,12 @@ jobs:
      with:
       name: bandit-findings
       path: bandit-report.json
-      
- image_scan:
-  name: Build Image and Run Image Scan
-  runs-on: ubuntu-latest
 
-  steps:
+ image_scan:
+   name: Build Image and Run Image Scan
+   runs-on: ubuntu-latest
+
+   steps:
    - name: Checkout code
      uses: actions/checkout@v2
 
@@ -47,12 +44,20 @@ jobs:
 
    - name: Build Docker Image
      run: docker build -f Dockerfile -t myapp:latest .
-     
+
+   # - name: Docker Scout Scan
+     # run: |
+       # curl -fsSL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh -o install-scout.sh
+       # sh install-scout.sh
+       # echo ${{ secrets.REPO_PWD }} | docker login -u ${{ secrets.REPO_USER }} --password-stdin
+       # docker scout quickview
+       # docker scout cves
+
    - name: Docker Scout Scan
      uses: docker/scout-action@v1.0.9
      with:
-       dockerhub-user: ${{ secrets.DOCKER_REPO_USER }}
-       dockerhub-password: ${{ secrets.DOCKER_REPO_PWD }}
+       dockerhub-user: ${{ secrets.REPO_USER }}
+       dockerhub-password: ${{ secrets.REPO_PWD }}
        command: quickview,cves
        only-severities: critical,high
        sarif-file: scout-report.sarif
@@ -63,6 +68,3 @@ jobs:
      with:
        name: docker-scout-findings
        path: scout-report.sarif
-   
-  
-    
